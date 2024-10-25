@@ -20,7 +20,7 @@ interface ErrorResponse {
 }
 
 const app = express();
-
+app.use(express.json());
 if (
   !process.env.GOOGLE_CLIENT_EMAIL ||
   !process.env.GOOGLE_PRIVATE_KEY ||
@@ -84,6 +84,36 @@ app.get("/api/form-responses", async (_req: Request, res: Response) => {
   } catch (error) {
     res.status(500).json({ error: "Failed to fetch form responses" });
   }
+});
+
+//This will be hit by Google Forms Script: Sample Data to Test
+// Raw request body: {
+//   "timestamp": "2024-10-25T19:04:08.878Z",
+//   "name": "Te",
+//   "team_name": "T",
+//   "product_name": "T",
+//   "product_description": "5",
+//   "category": [
+//     "Infra",
+//     "Social"
+//   ],
+//   //Gooogle Drive Image ID:Can access from
+//   ///https://drive.usercontent.google.com/download?id=ID_HERE&export=view&authuser=0
+//   //If no provided use default one
+//   "team_logo_image": [
+//     "1pSq4qA7lKBdfMB9Z6EzUvB1Hx0bH3xn9"
+//   ],
+//   "eclipse_wallet_address": "Hehe"
+// }
+//
+app.post("/", async (req, res) => {
+  console.log("Raw request body:", JSON.stringify(req.body, null, 2));
+
+  if (!req.body || Object.keys(req.body).length === 0) {
+    console.error("Empty request body received");
+    res.status(400).json({ error: "No data received" });
+  }
+  res.status(200);
 });
 
 const PORT: number = parseInt(process.env.PORT || "3000", 10);
