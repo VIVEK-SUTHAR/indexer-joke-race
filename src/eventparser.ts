@@ -3,8 +3,11 @@ import { BorshCoder, EventParser, type Idl, BN } from "@project-serum/anchor";
 import idl from "../idl.json";
 import fs from "fs";
 import path, { extname } from "path";
+import { PROGRAM_ID } from "./constants";
+import client from "./redis";
+import { getContestantVotesKey, getLeaderboardKey } from "./leaderboard";
 
-const programId = new PublicKey("BUjBdCdFmNDrBn6Sg2SB4dd6H8StsFZ7U4JqvzEAYHgh");
+const programId = new PublicKey(PROGRAM_ID);
 const eventParser = new EventParser(programId, new BorshCoder(idl as Idl));
 
 export type ParseEventOptions = {
@@ -34,12 +37,23 @@ type EventVoteCasted = {
 
 async function handleVoteCasted(data: EventVoteCasted) {
   try {
-    console.log("Voted By ", data.votedBy.toString());
-    console.log("Voted AT ", data.castedAt.toString());
-    console.log("Contest ID ", data.contestId.toString());
-    //TO-do
-    //Prepare DB Statements and Update Recored on Parsed Event
-  } catch (error) {}
+    const contestId = data.contestId.toString();
+    const contestantId = data.contestantId.toString();
+    console.log("Vote Txn");
+    console.count(data.contestantId);
+    await client.zIncrBy(getLeaderboardKey(contestId), 1, contestantId);
+
+    await client.hSet(
+      getContestantVotesKey(contestId, contestantId),
+      data.castedAt.toString(),
+      JSON.stringify({
+        votedBy: data.votedBy.toString(),
+        timestamp: data.castedAt.toString(),
+      }),
+    );
+  } catch (error) {
+    console.log(error);
+  }
 }
 type EventContestCreated = {
   contestId: BN;
@@ -57,7 +71,5 @@ async function handleContestCreated(data: EventContestCreated) {
     console.log("Created By", data.createdBy.toString());
     console.log("Created At", data.createdAt.toString());
     console.log("MetadataUri", data.metadataUri);
-    //TO-do
-    //Prepare DB Statements and Update Recored on Parsed Event
   } catch (error) {}
 }

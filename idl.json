@@ -219,12 +219,7 @@
           },
           {
             "name": "contestantId",
-            "type": {
-              "array": [
-                "u8",
-                32
-              ]
-            }
+            "type": "u64"
           },
           {
             "name": "voter",
@@ -315,6 +310,6 @@
     }
   ],
   "metadata": {
-    "address": "BUjBdCdFmNDrBn6Sg2SB4dd6H8StsFZ7U4JqvzEAYHgh"
+    "address": "AS6Y2tgLoPWRJwgEQJ327FiG7J4UKfWezbkytboXVCGK"
   }
 }

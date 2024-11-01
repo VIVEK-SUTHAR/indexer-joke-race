@@ -5,12 +5,14 @@ import idl from "./idl.json";
 import fs from "fs";
 import path from "path";
 import parseEvents from "./src/eventparser";
-
-const SOLANA_RPC_URL = "http://127.0.0.1:8899";
+import { PROGRAM_ID, SOLANA_RPC_URL } from "./src/constants";
+import "./server";
+import initializeDatabase from "./src/db/init";
+import indexProgramTransactions from "./src/indexVoteTxns";
 const CONFIG_FILE_PATH = path.resolve(__dirname, "config.json");
 
 const connection = new Connection(SOLANA_RPC_URL);
-const programId = new PublicKey("BUjBdCdFmNDrBn6Sg2SB4dd6H8StsFZ7U4JqvzEAYHgh");
+const programId = new PublicKey(PROGRAM_ID);
 const eventParser = new EventParser(programId, new BorshCoder(idl as Idl));
 
 let lastSignature: string | undefined;
@@ -20,55 +22,21 @@ if (fs.existsSync(CONFIG_FILE_PATH)) {
   lastSignature = config.lastSignature;
 }
 
-const processedSignatures = new Set<string>();
-
-async function fetchTransactions() {
+async function main() {
   try {
-    const voteAccountAddress = programId;
-
-    let hasMore = true;
-
-    while (hasMore) {
-      const signatures = await connection.getSignaturesForAddress(
-        voteAccountAddress,
-        {
-          until: lastSignature ?? undefined,
-        },
-      );
-
-      if (signatures.length > 0) {
-        for (let { signature } of signatures) {
-          if (processedSignatures.has(signature)) {
-            continue;
-          }
-
-          const transaction = await connection.getTransaction(signature, {
-            commitment: "confirmed",
-          });
-
-          if (transaction?.meta?.logMessages) {
-            parseEvents({ logs: transaction.meta.logMessages });
-          } else {
-            console.log("No logs found for transaction:", signature);
-          }
-          processedSignatures.add(signature);
-        }
-        lastSignature = signatures[signatures.length - 1].signature;
-
-        fs.writeFileSync(
-          CONFIG_FILE_PATH,
-          JSON.stringify({ lastSignature }, null, 2),
-          "utf8",
-        );
-      } else {
-        hasMore = false;
-        console.log("No more signatures found.");
-      }
-    }
+    await initializeDatabase();
+    const options = {
+      lastSignature: lastSignature,
+      programId: PROGRAM_ID,
+      connection: connection,
+      configFilePath: CONFIG_FILE_PATH,
+    };
+    setInterval(() => {
+      indexProgramTransactions(options);
+    }, 15000);
+    await indexProgramTransactions(options);
   } catch (error) {
-    console.error("Error fetching transactions:", error);
+    console.log(error);
   }
 }
-
-setInterval(fetchTransactions, 30000);
-fetchTransactions();
+main();
