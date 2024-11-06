@@ -1,20 +1,18 @@
 import { Connection, PublicKey } from "@solana/web3.js";
-import { WebSocket } from "ws";
-import { BorshCoder, EventParser, type Idl } from "@project-serum/anchor";
 import idl from "./idl.json";
 import fs from "fs";
 import path from "path";
 import parseEvents from "./src/eventparser";
 import { PROGRAM_ID, SOLANA_RPC_URL } from "./src/constants";
-import "./server";
 import initializeDatabase from "./src/db/init";
 import indexProgramTransactions from "./src/indexVoteTxns";
-const CONFIG_FILE_PATH = path.resolve(__dirname, "config.json");
+import clearAndResetDatabase from "./src/db/reset";
+import client from "./src/redis";
+import { execSync } from "child_process";
 
+const CONFIG_FILE_PATH = path.resolve(__dirname, "config.json");
 const connection = new Connection(SOLANA_RPC_URL);
 const programId = new PublicKey(PROGRAM_ID);
-const eventParser = new EventParser(programId, new BorshCoder(idl as Idl));
-
 let lastSignature: string | undefined;
 
 if (fs.existsSync(CONFIG_FILE_PATH)) {
@@ -22,21 +20,49 @@ if (fs.existsSync(CONFIG_FILE_PATH)) {
   lastSignature = config.lastSignature;
 }
 
+async function processArgs() {
+  process.argv.forEach(async function (val, index, array) {
+    if (val === "--clean") {
+      console.log("Found clean option, Cleaning up DB and Redis");
+      console.log("Resetting DB...");
+      await clearAndResetDatabase();
+      console.log("DB Reset!");
+      console.log("REDIS Cleaning...");
+      await client.flushAll();
+      console.log("REDIS Cleaned!");
+      if (fs.existsSync(CONFIG_FILE_PATH)) {
+        execSync(`rm ${process.cwd()}/config.json`);
+      }
+    }
+  });
+}
+
+async function startServer() {
+  await import("./server");
+}
+
 async function main() {
   try {
+    await startServer();
+    await processArgs();
+
     await initializeDatabase();
+
     const options = {
       lastSignature: lastSignature,
       programId: PROGRAM_ID,
       connection: connection,
       configFilePath: CONFIG_FILE_PATH,
     };
+
     setInterval(() => {
       indexProgramTransactions(options);
     }, 15000);
+
     await indexProgramTransactions(options);
   } catch (error) {
     console.log(error);
   }
 }
+
 main();

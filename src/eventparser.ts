@@ -66,10 +66,11 @@ type EventContestCreated = {
 
 async function handleContestCreated(data: EventContestCreated) {
   try {
-    console.log(data);
     console.log("Contest ID", data.contestId.toString());
     console.log("Created By", data.createdBy.toString());
     console.log("Created At", data.createdAt.toString());
     console.log("MetadataUri", data.metadataUri);
-  } catch (error) {}
+  } catch (error) {
+    console.log(error, "");
+  }
 }

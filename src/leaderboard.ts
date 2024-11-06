@@ -110,11 +110,10 @@ async function getLeaderboard(
         contestantId: id.toString(),
         contestantData: data,
         votes: 0,
-        rank: null, // default rank, to be assigned
+        rank: null,
       }),
     );
 
-    // Fetch contestants with votes from Redis
     const [totalContestants, totalVotesArray, leaderboardEntries] =
       await Promise.all([
         client.zCard(leaderboardKey),
@@ -127,7 +126,6 @@ async function getLeaderboard(
       0,
     );
 
-    // Map votes and ranks from Redis entries
     leaderboardEntries.forEach((entry, index) => {
       const contestant = allContestants.find(
         (c) => c.contestantId === entry.value,
@@ -138,14 +136,12 @@ async function getLeaderboard(
       }
     });
 
-    // Sort by rank, pushing zero-vote contestants to the bottom
     allContestants.sort(
       (a, b) =>
         (a.rank !== null ? a.rank : Infinity) -
         (b.rank !== null ? b.rank : Infinity),
     );
 
-    // Compute percentage of total votes
     const entries = allContestants.map((contestant) => ({
       ...contestant,
       percentageOfTotal:

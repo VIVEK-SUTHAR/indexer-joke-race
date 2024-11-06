@@ -21,7 +21,12 @@
           "isSigner": false
         }
       ],
-      "args": []
+      "args": [
+        {
+          "name": "authority",
+          "type": "publicKey"
+        }
+      ]
     },
     {
       "name": "initContestCounter",
@@ -310,6 +315,6 @@
     }
   ],
   "metadata": {
-    "address": "AS6Y2tgLoPWRJwgEQJ327FiG7J4UKfWezbkytboXVCGK"
+    "address": "AjCadrNzohgyFNaDsFWgziJnhpAVq4bbQkrwFu6JfLdR"
   }
 }
