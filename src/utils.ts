@@ -12,7 +12,9 @@ const contestantMap = new Map<number, any>();
 
 export async function getAllContestants() {
   try {
-    const res = await fetch("https://solana-app-day.vercel.app/api/contestant");
+    const res = await fetch(
+      "https://solana-app-day.vercel.app/api/contestant?limit=500",
+    );
     const { data } = await res.json();
     await initializeLeaderboard("1", data);
     data.forEach((contestant: any) => {

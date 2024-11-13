@@ -79,6 +79,10 @@
           "type": "string"
         },
         {
+          "name": "startTime",
+          "type": "i64"
+        },
+        {
           "name": "endTime",
           "type": "i64"
         }
@@ -312,9 +316,13 @@
     {
       "code": 6002,
       "name": "Unauthorized"
+    },
+    {
+      "code": 6003,
+      "name": "VotingNotStarted"
     }
   ],
-  "metadata": {
-    "address": "AjCadrNzohgyFNaDsFWgziJnhpAVq4bbQkrwFu6JfLdR"
+  "metadata":{
+    "address":"7AM2gAnqJ4B3NGJbSrfVW6LBGYzoph3XEhEFtWZ2n5Z"
   }
 }

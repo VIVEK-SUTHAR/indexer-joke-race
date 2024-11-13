@@ -9,6 +9,7 @@ import indexProgramTransactions from "./src/indexVoteTxns";
 import clearAndResetDatabase from "./src/db/reset";
 import client from "./src/redis";
 import { execSync } from "child_process";
+import { ConnectionTimeoutError } from "redis";
 
 const CONFIG_FILE_PATH = path.resolve(__dirname, "config.json");
 const connection = new Connection(SOLANA_RPC_URL);
@@ -48,18 +49,20 @@ async function main() {
 
     await initializeDatabase();
 
-    const options = {
-      lastSignature: lastSignature,
-      programId: PROGRAM_ID,
+    await indexProgramTransactions({
       connection: connection,
+      programId: programId,
+      lastSignature: lastSignature,
       configFilePath: CONFIG_FILE_PATH,
-    };
-
-    setInterval(() => {
-      indexProgramTransactions(options);
-    }, 15000);
-
-    await indexProgramTransactions(options);
+    });
+    setInterval(async () => {
+      await indexProgramTransactions({
+        connection: connection,
+        programId: programId,
+        lastSignature: lastSignature,
+        configFilePath: CONFIG_FILE_PATH,
+      });
+    }, 10000);
   } catch (error) {
     console.log(error);
   }
