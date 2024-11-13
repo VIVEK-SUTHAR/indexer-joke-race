@@ -1,32 +1,35 @@
 import { turso } from "./turso";
 import fs from "fs";
 import path from "path";
+import client from "../redis";
 
 const logFilePath = path.join(__dirname, "failed_signatures_insert.log");
 
 async function markSignatureAsProcessed(signature: string): Promise<void> {
-  const maxRetries = 3;
-  let attempts = 0;
+  await client.set(signature, "true");
 
-  while (attempts < maxRetries) {
-    try {
-      await turso.execute({
-        sql: "INSERT INTO processed_transactions (signature) VALUES (?)",
-        args: [signature],
-      });
-      break;
-    } catch (error) {
-      attempts++;
-      console.error(
-        `Error marking signature as processed (Attempt ${attempts}):`,
-        error,
-      );
-
-      if (attempts === maxRetries) {
-        logFailedSignature(signature);
-      }
-    }
-  }
+  // const maxRetries = 3;
+  // let attempts = 0;
+  //
+  // while (attempts < maxRetries) {
+  //   try {
+  //     await turso.execute({
+  //       sql: "INSERT INTO processed_transactions (signature) VALUES (?)",
+  //       args: [signature],
+  //     });
+  //     break;
+  //   } catch (error) {
+  //     attempts++;
+  //     console.error(
+  //       `Error marking signature as processed (Attempt ${attempts}):`,
+  //       error,
+  //     );
+  //
+  //     if (attempts === maxRetries) {
+  //       logFailedSignature(signature);
+  //     }
+  //   }
+  // }
 }
 
 function logFailedSignature(signature: string): void {

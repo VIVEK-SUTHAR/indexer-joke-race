@@ -9,12 +9,7 @@ if (!TURSO_AUTH_TOKEN || !TURSO_DATABASE_URL) {
   process.exit(1);
 }
 
-const dbPath = path.resolve(__dirname, "../../sigdb.db");
-const dbDir = path.dirname(dbPath);
-
 export const turso = createClient({
-  url: `file:${dbPath}`,
-  syncUrl: TURSO_DATABASE_URL,
+  url: TURSO_DATABASE_URL,
   authToken: TURSO_AUTH_TOKEN,
-  syncInterval: 40,
 });

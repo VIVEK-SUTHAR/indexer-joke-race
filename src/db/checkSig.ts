@@ -1,6 +1,7 @@
 import { turso } from "./turso";
 import * as fs from "fs";
 import * as path from "path";
+import client from "../redis";
 
 const ERROR_LOG_DIR = "logs";
 const ERROR_LOG_FILE = path.join(ERROR_LOG_DIR, "failed_signatures.log");
@@ -19,11 +20,16 @@ function logFailedSignature(signature: string, error: any) {
 
 async function isSignatureProcessed(signature: string): Promise<boolean> {
   try {
-    const result = await turso.execute({
-      sql: "SELECT signature FROM processed_transactions WHERE signature = ?",
-      args: [signature],
-    });
-    return result.rows.length > 0;
+    const is = await client.get(signature);
+    if (!is) return false;
+    if (is === "true") {
+      return true;
+    }
+    // const result = await turso.execute({
+    //   sql: "SELECT signature FROM processed_transactions WHERE signature = ?",
+    //   args: [signature],
+    // });
+    // return result.rows.length > 0;
   } catch (error) {
     console.error("Error checking signature:", error);
     logFailedSignature(signature, error);

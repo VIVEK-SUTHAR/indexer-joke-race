@@ -4,6 +4,7 @@ import { getLeaderboard, getLeaderboardKey } from "./src/leaderboard";
 import "./src/redis/index";
 import getFormResponses from "./src/google/getFormResponses";
 import cors from "cors";
+
 const app = express();
 app.use(express.json());
 
